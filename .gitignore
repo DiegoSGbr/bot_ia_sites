@@ -1,0 +1,11 @@
+# Arquivos e pastas a serem ignorados pelo Git
+
+.env
+__pycache__/
+venv/
+*.pyc
+*.pyo
+*.pyd
+.idea/
+*.sqlite3
+.DS_Store
