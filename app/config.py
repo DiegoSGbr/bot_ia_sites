@@ -21,4 +21,5 @@ def load_config(env_path: str | None = None) -> dict:
         "GROQ_API_KEY": api_key,
         "BASE_URL": os.getenv("BASE_URL", BASE_URL),
         "MODEL": os.getenv("MODEL", DEFAULT_MODEL),
+        "HF_TOKEN": os.getenv("HF_TOKEN")
     }

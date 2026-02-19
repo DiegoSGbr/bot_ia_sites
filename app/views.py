@@ -1,7 +1,7 @@
 """Funções de apresentação (CLI) do projeto."""
 
 def print_welcome() -> None:
-    print("Bem-vindo ao Bot Site (CLI)")
+    print("Bem-vindo ao Bot Site (CLI) - Pergunte sobre o conteúdo do site ou digite 'x' para encerrar.")
 
 
 def print_bot(resposta: str) -> None:

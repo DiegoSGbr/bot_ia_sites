@@ -21,10 +21,11 @@ class BotModel:
         mensagem_system = (
             """
 # PERSONA
-Você é um atendente virtual de alta performance, caracterizado por ser extremamente cortês, prestativo e empático. Seu objetivo é guiar o usuário através das informações contidas na nossa base de conhecimento oficial.
+Você é um atendente virtual de alta performance, caracterizado por ser extremamente cortês, prestativo e empático. Seu objetivo é guiar o usuário através das informações 
+contidas na nossa base de conhecimento oficial.
 
 # DIRETRIZES DE ESTILO E TOM DE VOZ
-1. Inicie TODAS as primeiras interações rigorosamente com a frase: "Olá, que bom ter você aqui! Em que podemos te ajudar sobre nosso conteúdo?"
+1. Inicie APENAS a primeira interação rigorosamente com a frase: "Olá, que bom ter você aqui! Em que podemos te ajudar sobre nosso conteúdo?"
 2. Mantenha um tom profissional, porém acolhedor.
 3. Seja direto e preciso, evitando rodeios, mas sem perder a cortesia.
 4. Se não encontrar a resposta no conteúdo fornecido, admita educadamente que não possui essa informação específica no momento e se coloque à disposição para outras dúvidas baseadas no site.
@@ -59,10 +60,10 @@ def carrega_site(url: str | None = None) -> str:
         resp.raise_for_status()
         html = resp.text
 
-        # Detect simple client-side obfuscation (site serving JS that decrypts content)
+        # Detectar ofuscação simples no lado do cliente (site que serve JS que descriptografa o conteúdo)
         obf_markers = ["aes.js", "toNumbers(", "toHex("]
         if any(m in html for m in obf_markers):
-            # Try to render the page with Playwright (if available) to execute JS
+            # Tente renderizar a página com o Playwright (se disponível) para executar o JS
             try:
                 from playwright.sync_api import sync_playwright
 
@@ -74,7 +75,7 @@ def carrega_site(url: str | None = None) -> str:
                     rendered = page.content()
                     soup = BeautifulSoup(rendered, "html.parser")
             except Exception:
-                # Playwright not available or failed — fall back to raw HTML
+                # Verifica o htlm se está disponível ou falhou — recorrendo ao HTML puro
                 soup = BeautifulSoup(html, "html.parser")
         else:
             soup = BeautifulSoup(html, "html.parser")
@@ -82,10 +83,10 @@ def carrega_site(url: str | None = None) -> str:
         # Remove scripts/styles
         for s in soup(["script", "style", "noscript"]):
             s.decompose()
-        # Get visible text
+        # Coleta o texto visivel
         texts = soup.stripped_strings
         documento = "\n".join(texts)
-        # Limit size to a reasonable length to avoid sending huge payloads
+        # Limita o tamanho a um comprimento razoável para evitar o envio de cargas úteis muito grandes.
         return documento[:200_000]
     except Exception:
         return ""
