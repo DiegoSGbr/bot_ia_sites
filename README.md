@@ -72,6 +72,13 @@ scripts/
 1. Renomeie o arquivo `.env.example` para `.env` e ajuste as variáveis conforme necessário.
 2. Configure os parâmetros em `app/config.py` se necessário.
 
+### Tempo de resposta do bot
+
+- **Padrão**: o bot usa o modelo `llama-3.1-8b-instant` e **streaming**: a resposta aparece no console aos poucos, reduzindo a sensação de espera.
+- **Limites**: contexto do site limitado a 40k caracteres, resposta a 1024 tokens e histórico a 16 mensagens (ajustáveis no `.env`).
+- **Mais qualidade (mais lento)**: no `.env` use `MODEL=llama-3.3-70b-versatile`.
+- **Ajustes opcionais no `.env`**: `MAX_CONTEXT_CHARS`, `MAX_RESPONSE_TOKENS`, `MAX_HISTORY_MESSAGES`.
+
 ## Execução
 
 Para rodar o projeto:

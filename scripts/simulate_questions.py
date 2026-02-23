@@ -1,3 +1,5 @@
+import time
+
 from app.models import BotModel
 from app.services import carrega_site
 
@@ -8,18 +10,19 @@ def simulate():
     perguntas = [
         "Qual é o objetivo do site?",
         "Que serviços esse site oferece?",
-        "O que é um tour virtual oferecido pela empresa?",
-        "Como a empresa trabalha com Google Maps?",
     ]
     mensagens = []
     for p in perguntas:
         mensagens.append(("user", p))
+        t0 = time.perf_counter()
         resposta = model.resposta_bot(mensagens, documento)
+        elapsed = time.perf_counter() - t0
         mensagens.append(("assistant", resposta))
         print("Pergunta:", p)
-        print("Resposta:\n", resposta)
+        print(f"Tempo: {elapsed:.1f}s")
+        print("Resposta:\n", resposta[:500] + ("..." if len(resposta) > 500 else ""))
         print("-" * 60)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     simulate()
