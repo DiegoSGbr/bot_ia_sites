@@ -5,7 +5,9 @@ Desenvolvido em Python, recebe como Rag principal uma url de Site e uma chave da
 
 O objetivo é servir como base teste para experimentos e futuras melhorias(api, end point, crud para recebimento de parametros, receber outros modelos de ia, controle de usuarios, integração com site passado como parametro dentre outras melhorias).
 
-## Estrutura do Projeto
+## Estrutura do Projeto (MVC)
+
+O projeto segue o padrão **MVC** (Model-View-Controller), com uma pasta **services/** para lógica de negócio e integrações, facilitando a inclusão de novos serviços, views e controllers no futuro.
 
 ```
 IA Bot SIte.py
@@ -13,19 +15,31 @@ main.py
 requirements.txt
 app/
     __init__.py
-    config.py
-    controllers.py
-    models.py
-    views.py
+    config.py              # Configuração e variáveis de ambiente
+    models/                 # Modelos (entidades, integração LLM)
+        __init__.py
+        bot_model.py
+    views/                  # Apresentação (CLI; futuramente API/Web)
+        __init__.py
+        cli.py
+    controllers/            # Controladores (orquestração)
+        __init__.py
+        cli_controller.py
+    services/               # Serviços (carregamento de sites, APIs, etc.)
+        __init__.py
+        site_loader.py
 scripts/
     __init__.py
     simulate_questions.py
 ```
 
 - **main.py**: Ponto de entrada da aplicação.
-- **IA Bot SIte.py**: Script principal do bot (verifique se o nome está correto, pois há um possível erro de digitação).
+- **IA Bot SIte.py**: Launcher que delega para `main.py`.
 - **requirements.txt**: Lista de dependências do projeto.
-- **app/**: Módulos principais da aplicação (configurações, controladores, modelos e views).
+- **app/models/**: Modelos (ex.: `BotModel` para o chat com Groq/LangChain).
+- **app/views/**: Views de apresentação (CLI hoje; depois pode ter API/Web).
+- **app/controllers/**: Controladores que orquestram models, services e views.
+- **app/services/**: Serviços de negócio (ex.: `carrega_site` para extrair conteúdo do site).
 - **scripts/**: Scripts auxiliares para simulação e testes.
 
 ## Pré-requisitos

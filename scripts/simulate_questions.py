@@ -1,4 +1,5 @@
-from app.models import BotModel, carrega_site
+from app.models import BotModel
+from app.services import carrega_site
 
 
 def simulate():

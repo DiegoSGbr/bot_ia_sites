@@ -1,23 +1,23 @@
-"""Modelos e integração com LangChain / Groq."""
+"""Modelo do bot: integração com LangChain / Groq para respostas baseadas em contexto (RAG)."""
 
 from typing import List
-import os
 
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
-import requests
-from bs4 import BeautifulSoup
 
-from .config import load_config
+from app.config import load_config
 
 
 class BotModel:
+    """Modelo de chat que utiliza o contexto do site para responder ao usuário."""
+
     def __init__(self, model_name: str | None = None):
         cfg = load_config()
         model = model_name or cfg.get("MODEL")
         self.chat = ChatGroq(model=model)
 
     def resposta_bot(self, mensagens: List[tuple], documento: str) -> str:
+        """Gera resposta do bot com base nas mensagens e no documento de contexto (RAG)."""
         mensagem_system = (
             """
 # PERSONA
@@ -49,44 +49,3 @@ Sua única fonte de verdade para responder perguntas técnicas ou informativas �
         chain = template | self.chat
         result = chain.invoke({"informacoes": documento})
         return getattr(result, "content", str(result))
-
-
-def carrega_site(url: str | None = None) -> str:
-    cfg = load_config()
-    url = url or cfg.get("BASE_URL")
-    headers = {"User-Agent": "Mozilla/5.0 (compatible; Bot/1.0)"}
-    try:
-        resp = requests.get(url, headers=headers, timeout=15)
-        resp.raise_for_status()
-        html = resp.text
-
-        # Detectar ofuscação simples no lado do cliente (site que serve JS que descriptografa o conteúdo)
-        obf_markers = ["aes.js", "toNumbers(", "toHex("]
-        if any(m in html for m in obf_markers):
-            # Tente renderizar a página com o Playwright (se disponível) para executar o JS
-            try:
-                from playwright.sync_api import sync_playwright
-
-                with sync_playwright() as pw:
-                    browser = pw.chromium.launch(headless=True)
-                    page = browser.new_page()
-                    page.set_extra_http_headers({"User-Agent": headers["User-Agent"]})
-                    page.goto(url, timeout=30000)
-                    rendered = page.content()
-                    soup = BeautifulSoup(rendered, "html.parser")
-            except Exception:
-                # Verifica o htlm se está disponível ou falhou — recorrendo ao HTML puro
-                soup = BeautifulSoup(html, "html.parser")
-        else:
-            soup = BeautifulSoup(html, "html.parser")
-
-        # Remove scripts/styles
-        for s in soup(["script", "style", "noscript"]):
-            s.decompose()
-        # Coleta o texto visivel
-        texts = soup.stripped_strings
-        documento = "\n".join(texts)
-        # Limita o tamanho a um comprimento razoável para evitar o envio de cargas úteis muito grandes.
-        return documento[:200_000]
-    except Exception:
-        return ""

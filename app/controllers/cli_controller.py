@@ -1,10 +1,12 @@
-"""Controladores: lógica de aplicação (CLI loop)."""
+"""Controlador do fluxo CLI: loop de perguntas e respostas com o bot."""
 
-from .models import BotModel, carrega_site
-from .views import print_welcome, print_bot, get_user_input
+from app.models import BotModel
+from app.services import carrega_site
+from app.views import print_welcome, print_bot, get_user_input
 
 
 def run_cli() -> None:
+    """Inicia o loop interativo da interface em linha de comando."""
     print_welcome()
     model = BotModel()
     documento = carrega_site()

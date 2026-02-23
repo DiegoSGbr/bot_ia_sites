@@ -1,10 +1,18 @@
-"""Pacote `app` para o projeto refatorado (MVC).
+"""
+Pacote principal do projeto (arquitetura MVC).
+
+Estrutura:
+- models/   : modelos (entidades, integração LLM)
+- views/    : apresentação (CLI, futuramente API/Web)
+- controllers/ : orquestração da aplicação
+- services/ : serviços de negócio (carregamento de sites, APIs, etc.)
 """
 
-from .config import load_config
-from .models import BotModel, carrega_site
-from .views import print_welcome, print_bot, get_user_input
-from .controllers import run_cli
+from app.config import load_config
+from app.models import BotModel
+from app.services import carrega_site
+from app.views import print_welcome, print_bot, get_user_input
+from app.controllers import run_cli
 
 __all__ = [
     "load_config",
