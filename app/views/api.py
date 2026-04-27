@@ -62,7 +62,7 @@ def configurar_config_bot(payload: ConfigRequest, request: Request) -> ConfigRes
     cfg["widget_script_url"] = f"{base}/widget.js"
     return ConfigResponse(
         success=True,
-        message="Configuração aplicada com sucesso. Embaixe o chat com: <script src=\"" + base + "/widget.js\"></script>",
+        message="Configuração aplicada com sucesso. Baixe o chat com: <script src="" + base + "/widget.js\"></script>",
         config=cfg,
     )
 
