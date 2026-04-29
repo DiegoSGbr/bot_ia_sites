@@ -1,4 +1,4 @@
-"""Modelo do bot: integração com LangChain / Groq para respostas baseadas em contexto (RAG)."""
+"""Modelo do bot: integração com LangChain / Grok para respostas baseadas em contexto (RAG)."""
 
 from typing import Iterator, List
 

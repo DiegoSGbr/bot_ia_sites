@@ -1,0 +1,6 @@
+cd d:\projetos\bot_ia_sites
+py -3.11 -m venv .venv311
+.\.venv311\Scripts\activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+uvicorn app.views.api:app --host 0.0.0.0 --port 8000 --reload

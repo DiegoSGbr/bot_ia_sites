@@ -36,7 +36,7 @@ scripts/
 - **main.py**: Ponto de entrada da aplicação.
 - **IA Bot SIte.py**: Launcher que delega para `main.py`.
 - **requirements.txt**: Lista de dependências do projeto.
-- **app/models/**: Modelos (ex.: `BotModel` para o chat com Groq/LangChain).
+- **app/models/**: Modelos (ex.: `BotModel` para o chat com Grok/LangChain).
 - **app/views/**: Views de apresentação (CLI hoje; depois pode ter API/Web).
 - **app/controllers/**: Controladores que orquestram models, services e views.
 - **app/services/**: Serviços de negócio (ex.: `carrega_site` para extrair conteúdo do site).
@@ -46,6 +46,26 @@ scripts/
 
 - Python 3.8+
 - (Opcional) Ambiente virtual recomendado Venv
+
+## Ambiente recomendado (Windows)
+
+Para evitar problemas de instalação (build de dependências nativas) em alguns ambientes,
+recomendo usar **Python 3.11** (ou **3.12**) neste projeto.
+
+Em especial, **evite Python 3.13** se você estiver no Windows sem ferramentas de compilação
+disponíveis, pois algumas dependências podem tentar compilar `numpy` e falhar.
+
+### Passo a passo (Python 3.11 + venv)
+
+No PowerShell, dentro da pasta do projeto (`d:\projetos\bot_ia_sites`):
+
+```powershell
+py -3.11 -m venv .venv
+.\.venv\Scripts\activate
+
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
 
 ## Instalação
 
@@ -92,6 +112,23 @@ Ou, se desejar rodar o script principal do bot:
 ```bash
 python "IA Bot SIte.py"
 ```
+
+## Rodar API (FastAPI)
+
+Se você quiser disponibilizar as rotas HTTP (por exemplo `POST /config`, `POST /chat` e `GET /widget.js`), rode a API com `uvicorn`:
+
+```powershell
+uvicorn app.views.api:app --host 0.0.0.0 --port 8000 --reload
+```
+
+Depois, valide rapidamente no navegador:
+
+- Documentação Swagger: `http://localhost:8000/docs`
+- Widget JS: `http://localhost:8000/widget.js`
+
+E a configuração do bot via endpoint:
+
+- `POST http://localhost:8000/config` com JSON `{ "GROK_API_KEY": "...", "BASE_URL": "https://..." }`
 
 ## Scripts Auxiliares
 

@@ -9,7 +9,7 @@ def resposta_chat(message: str, history: List[dict]) -> str:
 
     - history: lista de {"role": "user" | "assistant", "content": "..."}
     - message: nova mensagem do usuário
-    - Usa a configuração atual (GROQ_API_KEY, BASE_URL) e o documento do site (RAG).
+    - Usa a configuração atual (GROK_API_KEY, BASE_URL) e o documento do site (RAG).
     """
     from app.models import BotModel
     from app.services import carrega_site

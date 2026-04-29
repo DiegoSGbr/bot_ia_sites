@@ -33,7 +33,7 @@ WIDGET_JS_PATH = Path(__file__).resolve().parent.parent / "static" / "widget.js"
 class ConfigRequest(BaseModel):
     """Payload recebido no endpoint de configuração."""
 
-    GROQ_API_KEY: str
+    GROK_API_KEY: str
     BASE_URL: str
 
 
@@ -53,7 +53,7 @@ class ConfigResponse(BaseModel):
 def configurar_config_bot(payload: ConfigRequest, request: Request) -> ConfigResponse:
     """Endpoint de configuração inicial do bot.
 
-    Recebe `GROQ_API_KEY` e `BASE_URL`, aplica no processo e retorna um snapshot
+    Recebe `GROK_API_KEY` e `BASE_URL`, aplica no processo e retorna um snapshot
     da configuração atual. Use `widget_script_url` para embutir o chat no site.
     """
     input_validado = ConfigInput(**payload.model_dump())
@@ -62,7 +62,7 @@ def configurar_config_bot(payload: ConfigRequest, request: Request) -> ConfigRes
     cfg["widget_script_url"] = f"{base}/widget.js"
     return ConfigResponse(
         success=True,
-        message="Configuração aplicada com sucesso. Baixe o chat com: <script src="" + base + "/widget.js\"></script>",
+        message=f'Configuração aplicada com sucesso. Baixe o chat com: <script src="{base}/widget.js"></script>',
         config=cfg,
     )
 
