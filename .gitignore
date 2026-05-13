@@ -10,3 +10,6 @@ venv/
 *.sqlite3
 .DS_Store
 app/views/bot_ia_sites.code-workspace
+docs/DEPLOY_AWS.md
+README.md
+README.md

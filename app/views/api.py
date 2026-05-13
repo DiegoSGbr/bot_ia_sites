@@ -6,13 +6,14 @@ Exposição de endpoints públicos para configuração do bot e widget de chat e
 from pathlib import Path
 from typing import Any, Dict, List
 
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from app.controllers.api_controller import configurar_bot
 from app.services import resposta_chat
+from app.services.admin_auth_service import ErroAutenticacaoAdmin, validar_token_admin
 from app.services.config_service import ConfigInput
 
 
@@ -28,6 +29,20 @@ app.add_middleware(
 
 # Caminho do template do widget (app/static/widget.js)
 WIDGET_JS_PATH = Path(__file__).resolve().parent.parent / "static" / "widget.js"
+
+
+def _exigir_admin_token(
+    x_admin_token: str | None = Header(
+        None,
+        alias="X-ADMIN-TOKEN",
+        description="Token igual ao definido em ADMIN_TOKEN no servidor.",
+    ),
+) -> None:
+    """Dependency: valida o token administrativo antes de aplicar configuração."""
+    try:
+        validar_token_admin(x_admin_token)
+    except ErroAutenticacaoAdmin as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
 
 
 class ConfigRequest(BaseModel):
@@ -50,9 +65,14 @@ class ConfigResponse(BaseModel):
 
 
 @app.post("/config", response_model=ConfigResponse)
-def configurar_config_bot(payload: ConfigRequest, request: Request) -> ConfigResponse:
+def configurar_config_bot(
+    payload: ConfigRequest,
+    request: Request,
+    _: None = Depends(_exigir_admin_token),
+) -> ConfigResponse:
     """Endpoint de configuração inicial do bot.
 
+    Requer header `X-ADMIN-TOKEN` igual à variável `ADMIN_TOKEN` do servidor.
     Recebe `GROK_API_KEY` e `BASE_URL`, aplica no processo e retorna um snapshot
     da configuração atual. Use `widget_script_url` para embutir o chat no site.
     """

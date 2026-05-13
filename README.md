@@ -121,6 +121,14 @@ Se você quiser disponibilizar as rotas HTTP (por exemplo `POST /config`, `POST 
 uvicorn app.views.api:app --host 0.0.0.0 --port 8000 --reload
 ```
 
+Defina **`ADMIN_TOKEN`** no `.env` (ou no ambiente do processo). O endpoint **`POST /config`** exige o header **`X-ADMIN-TOKEN`** com o mesmo valor; caso contrário retorna **401**. **`GET /widget.js`** e **`POST /chat`** continuam sem esse header.
+
+Exemplo local no PowerShell antes do `uvicorn`:
+
+```powershell
+$env:ADMIN_TOKEN="seu_secret_aqui"
+```
+
 Depois, valide rapidamente no navegador:
 
 - Documentação Swagger: `http://localhost:8000/docs`
@@ -128,7 +136,21 @@ Depois, valide rapidamente no navegador:
 
 E a configuração do bot via endpoint:
 
-- `POST http://localhost:8000/config` com JSON `{ "GROK_API_KEY": "...", "BASE_URL": "https://..." }`
+- `POST http://localhost:8000/config` com header `X-ADMIN-TOKEN: <ADMIN_TOKEN>` e JSON `{ "GROK_API_KEY": "...", "BASE_URL": "https://..." }`
+
+### Docker
+
+Ao subir com o `Dockerfile`, passe o secret no ambiente do container, por exemplo:
+
+`docker run -e ADMIN_TOKEN=seu_secret ...`
+
+### Deploy na AWS (produção)
+
+Checklist passo a passo (ECR, **ECS Modo Expresso** ou App Runner, S3/CloudFront, certificados, custos e validação): [`docs/DEPLOY_AWS.md`](docs/DEPLOY_AWS.md).
+
+### Deploy gratuito ou barato (testes com usuários)
+
+Opções como Cloud Run, Fly.io, Render, painel em Pages/Netlify e critérios para `/chat`: [`docs/DEPLOY_GRATUITO_TESTES_USUARIOS.md`](docs/DEPLOY_GRATUITO_TESTES_USUARIOS.md).
 
 ## Scripts Auxiliares
 

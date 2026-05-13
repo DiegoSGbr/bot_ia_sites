@@ -14,6 +14,9 @@ MAX_HISTORY_MESSAGES = 16   # Máximo de mensagens (user+assistant) no históric
 def load_config(env_path: str | None = None) -> dict:
     """Carrega `.env` e retorna dicionário com configuração relevante.
 
+    `ADMIN_TOKEN` é lido apenas para proteger `POST /config` (via serviço de auth),
+    não entra neste dicionário para não vazar em respostas.
+
     Se `GROK_API_KEY` estiver definida no `.env` ou no ambiente, garante que
     `os.environ['GROK_API_KEY']` esteja disponível para bibliotecas.
     """
@@ -26,10 +29,10 @@ def load_config(env_path: str | None = None) -> dict:
         return int(val) if val is not None and val.isdigit() else default
 
     return {
-        "GROK_API_KEY": api_key,
+        #"GROK_API_KEY": api_key,
         "BASE_URL": os.getenv("BASE_URL", BASE_URL),
         "MODEL": os.getenv("MODEL", DEFAULT_MODEL),
-        "HF_TOKEN": os.getenv("HF_TOKEN"),
+        #"HF_TOKEN": os.getenv("HF_TOKEN"),
         "MAX_CONTEXT_CHARS": _int("MAX_CONTEXT_CHARS", MAX_CONTEXT_CHARS),
         "MAX_RESPONSE_TOKENS": _int("MAX_RESPONSE_TOKENS", MAX_RESPONSE_TOKENS),
         "MAX_HISTORY_MESSAGES": _int("MAX_HISTORY_MESSAGES", MAX_HISTORY_MESSAGES),
