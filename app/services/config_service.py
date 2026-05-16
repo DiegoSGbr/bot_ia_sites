@@ -28,6 +28,7 @@ def aplicar_configuracao(data: ConfigInput) -> Dict[str, Any]:
     - Recarrega a configuração via `load_config` para refletir os novos valores.
     """
     os.environ["GROK_API_KEY"] = data.GROK_API_KEY
+    os.environ["GROQ_API_KEY"] = data.GROK_API_KEY
     os.environ["BASE_URL"] = str(data.BASE_URL)
 
     cfg = load_config()

@@ -18,12 +18,13 @@ def load_config(env_path: str | None = None) -> dict:
     não entra neste dicionário para não vazar em respostas.
 
     Se `GROK_API_KEY` estiver definida no `.env` ou no ambiente, garante que
-    `os.environ['GROK_API_KEY']` esteja disponível para bibliotecas.
+    `os.environ['GROK_API_KEY']` e `GROQ_API_KEY` (usada pelo ChatGroq) estejam disponíveis.
     """
     load_dotenv(env_path)
-    api_key = os.getenv("GROK_API_KEY")
+    api_key = os.getenv("GROK_API_KEY") or os.getenv("GROQ_API_KEY")
     if api_key:
         os.environ["GROK_API_KEY"] = api_key
+        os.environ["GROQ_API_KEY"] = api_key
     def _int(key: str, default: int) -> int:
         val = os.getenv(key)
         return int(val) if val is not None and val.isdigit() else default

@@ -3,7 +3,7 @@
 # e no Python 3.13 isso costuma acionar build nativo (falhando sem compilador C no Windows).
 # Para evitar esse atrito, este requirements foi limitado a Python < 3.13.
 langchain==0.3.0; python_version < "3.13"
-langchain-grok==0.2.0; python_version < "3.13"
+langchain-groq==0.2.0; python_version < "3.13"
 langchain-community==0.3.0; python_version < "3.13"
 youtube_transcript_api==0.6.2
 pypdf==5.0.0
