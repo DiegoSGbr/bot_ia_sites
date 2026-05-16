@@ -8,5 +8,7 @@ langchain-community==0.3.0; python_version < "3.13"
 youtube_transcript_api==0.6.2
 pypdf==5.0.0
 python-dotenv
+requests
+beautifulsoup4
 fastapi
 uvicorn[standard]
