@@ -1,6 +1,11 @@
 """Serviço de chat: orquestra BotModel e carrega_site para responder ao usuário via API."""
 
+import os
 from typing import List
+
+from app.config import load_config
+from app.services.rag_cache import atualizar_cache, obter_base_url, obter_documento
+from app.services.site_loader import carrega_site
 
 
 def resposta_chat(message: str, history: List[dict]) -> str:
@@ -9,12 +14,19 @@ def resposta_chat(message: str, history: List[dict]) -> str:
 
     - history: lista de {"role": "user" | "assistant", "content": "..."}
     - message: nova mensagem do usuário
-    - Usa a configuração atual (GROK_API_KEY, BASE_URL) e o documento do site (RAG).
+    - Usa cache RAG indexado em POST /config; fallback para scrape se cache vazio.
     """
     from app.models import BotModel
-    from app.services import carrega_site
 
-    documento = carrega_site()
+    documento = obter_documento()
+    if not documento.strip():
+        cfg = load_config()
+        base_url = cfg.get("BASE_URL") or obter_base_url()
+        documento = carrega_site(base_url)
+        if documento.strip() and base_url:
+            grok = os.getenv("GROK_API_KEY") or os.getenv("GROQ_API_KEY")
+            atualizar_cache(base_url, documento, grok)
+
     model = BotModel()
 
     mensagens: List[tuple] = []

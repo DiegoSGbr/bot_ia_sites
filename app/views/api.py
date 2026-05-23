@@ -3,6 +3,8 @@
 Exposição de endpoints públicos para configuração do bot e widget de chat embutível em sites.
 """
 
+import logging
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -15,20 +17,28 @@ from app.controllers.api_controller import configurar_bot
 from app.services import resposta_chat
 from app.services.admin_auth_service import ErroAutenticacaoAdmin, validar_token_admin
 from app.services.config_service import ConfigInput
+from app.services.rag_cache import carregar_do_disco, status_rag
+
+logger = logging.getLogger(__name__)
+
+WIDGET_JS_PATH = Path(__file__).resolve().parent.parent / "static" / "widget.js"
 
 
-app = FastAPI(title="Bot IA Sites API")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    if carregar_do_disco():
+        logger.info("Configuração e cache RAG restaurados do disco")
+    yield
 
-# CORS: o widget é carregado de outro domínio; o navegador envia OPTIONS (preflight) antes do POST /chat.
+
+app = FastAPI(title="Bot IA Sites API", lifespan=lifespan)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Caminho do template do widget (app/static/widget.js)
-WIDGET_JS_PATH = Path(__file__).resolve().parent.parent / "static" / "widget.js"
 
 
 def _exigir_admin_token(
@@ -53,11 +63,7 @@ class ConfigRequest(BaseModel):
 
 
 class ConfigResponse(BaseModel):
-    """Resposta básica de configuração.
-
-    Futuramente este modelo pode ser estendido para incluir o código do widget
-    que será embutido no site do cliente.
-    """
+    """Resposta básica de configuração."""
 
     success: bool
     message: str
@@ -70,26 +76,30 @@ def configurar_config_bot(
     request: Request,
     _: None = Depends(_exigir_admin_token),
 ) -> ConfigResponse:
-    """Endpoint de configuração inicial do bot.
-
-    Requer header `X-ADMIN-TOKEN` igual à variável `ADMIN_TOKEN` do servidor.
-    Recebe `GROK_API_KEY` e `BASE_URL`, aplica no processo e retorna um snapshot
-    da configuração atual. Use `widget_script_url` para embutir o chat no site.
-    """
+    """Endpoint de configuração inicial do bot."""
     input_validado = ConfigInput(**payload.model_dump())
     cfg = configurar_bot(input_validado)
     base = str(request.base_url).rstrip("/")
     cfg["widget_script_url"] = f"{base}/widget.js"
-    return ConfigResponse(
-        success=True,
-        message=f'Configuração aplicada com sucesso. Baixe o chat com: <script src="{base}/widget.js"></script>',
-        config=cfg,
-    )
+
+    if cfg.get("index_ok"):
+        message = (
+            f'Configuração aplicada com sucesso ({cfg.get("context_chars", 0)} caracteres indexados). '
+            f'Baixe o chat com: <script src="{base}/widget.js"></script>'
+        )
+    else:
+        message = (
+            "O site foi configurado, mas quase nenhum texto foi extraído da página. "
+            "Verifique a URL informada ou se o site depende de JavaScript para exibir o conteúdo. "
+            f'Script do widget: <script src="{base}/widget.js"></script>'
+        )
+
+    return ConfigResponse(success=True, message=message, config=cfg)
 
 
 class ChatMessage(BaseModel):
     """Uma mensagem do histórico (user ou assistant)."""
-    role: str  # "user" | "assistant"
+    role: str
     content: str
 
 
@@ -112,6 +122,12 @@ def chat(payload: ChatRequest) -> ChatResponse:
     return ChatResponse(response=text)
 
 
+@app.get("/health/rag")
+def health_rag() -> Dict[str, Any]:
+    """Diagnóstico do cache RAG (sem expor secrets)."""
+    return status_rag()
+
+
 @app.get("/widget.js")
 def widget_js(request: Request) -> Response:
     """Retorna o script do widget com a URL base da API injetada (para chamadas ao /chat)."""
@@ -119,4 +135,3 @@ def widget_js(request: Request) -> Response:
     base = str(request.base_url).rstrip("/")
     body = content.replace("__API_BASE_URL__", base)
     return Response(content=body, media_type="application/javascript")
-

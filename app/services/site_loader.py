@@ -1,9 +1,40 @@
 """Serviço de carregamento e extração de texto de páginas web."""
 
+import logging
+
 import requests
 from bs4 import BeautifulSoup
 
 from app.config import load_config
+
+logger = logging.getLogger(__name__)
+
+USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+)
+OBF_MARKERS = ["aes.js", "toNumbers(", "toHex("]
+
+
+def _html_para_texto(html: str) -> str:
+    soup = BeautifulSoup(html, "html.parser")
+    for tag in soup(["script", "style", "noscript"]):
+        tag.decompose()
+    return "\n".join(soup.stripped_strings)
+
+
+def _carrega_com_playwright(url: str) -> str:
+    from playwright.sync_api import sync_playwright
+
+    with sync_playwright() as pw:
+        browser = pw.chromium.launch(headless=True)
+        try:
+            page = browser.new_page()
+            page.set_extra_http_headers({"User-Agent": USER_AGENT})
+            page.goto(url, timeout=30000, wait_until="networkidle")
+            return _html_para_texto(page.content())
+        finally:
+            browser.close()
 
 
 def carrega_site(url: str | None = None) -> str:
@@ -14,35 +45,36 @@ def carrega_site(url: str | None = None) -> str:
     """
     cfg = load_config()
     url = url or cfg.get("BASE_URL")
-    headers = {"User-Agent": "Mozilla/5.0 (compatible; Bot/1.0)"}
+    if not url:
+        logger.warning("carrega_site: BASE_URL não configurada")
+        return ""
+
+    headers = {"User-Agent": USER_AGENT}
     try:
         resp = requests.get(url, headers=headers, timeout=15)
         resp.raise_for_status()
         html = resp.text
 
-        # Detectar ofuscação simples no lado do cliente (site que serve JS que descriptografa o conteúdo)
-        obf_markers = ["aes.js", "toNumbers(", "toHex("]
-        if any(m in html for m in obf_markers):
+        if any(m in html for m in OBF_MARKERS):
+            logger.info("Ofuscação JS detectada em %s; tentando Playwright", url)
             try:
-                from playwright.sync_api import sync_playwright
-
-                with sync_playwright() as pw:
-                    browser = pw.chromium.launch(headless=True)
-                    page = browser.new_page()
-                    page.set_extra_http_headers({"User-Agent": headers["User-Agent"]})
-                    page.goto(url, timeout=30000)
-                    rendered = page.content()
-                    soup = BeautifulSoup(rendered, "html.parser")
+                documento = _carrega_com_playwright(url)
+                if documento.strip():
+                    return documento[:200_000]
             except Exception:
-                soup = BeautifulSoup(html, "html.parser")
-        else:
-            soup = BeautifulSoup(html, "html.parser")
+                logger.exception("Playwright falhou para %s; usando HTML bruto", url)
 
-        # Remove scripts, estilos e noscript
-        for s in soup(["script", "style", "noscript"]):
-            s.decompose()
-        texts = soup.stripped_strings
-        documento = "\n".join(texts)
+        documento = _html_para_texto(html)
+        if len(documento.strip()) < 100:
+            logger.warning(
+                "Pouco texto extraído de %s (%d chars) após requests",
+                url,
+                len(documento),
+            )
         return documento[:200_000]
-    except Exception:
+    except requests.RequestException as exc:
+        logger.exception("Erro HTTP ao carregar %s: %s", url, exc)
+        return ""
+    except Exception as exc:
+        logger.exception("Erro inesperado ao carregar %s: %s", url, exc)
         return ""
